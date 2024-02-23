@@ -14,18 +14,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                String  @id @default(cuid())
@@ -53,15 +41,81 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Preferences {
+    User     User[]
+    id       String  @id @default(cuid())
+    darkMode Boolean
+}
+
 model User {
-    id            String    @id @default(cuid())
+    id            String       @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?      @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
+    Folder        Folder[]
+    File          File[]
+    scope         String? // Path of the scope (what user is able to acceess)
+    Permission    Permission[]
+    Preferences   Preferences? @relation(fields: [preferencesId], references: [id])
+    preferencesId String?
+
+    @@index([name])
+    @@index([email])
+    @@index([scope])
+}
+
+model Permission {
+    id       Int     @id @default(autoincrement())
+    read     Boolean // Is user allowed to read?
+    write    Boolean // Is user allowed to write?
+    user     User    @relation(fields: [userId], references: [id]) // User who has the permission, below is the id
+    userId   String
+    file     File?   @relation(fields: [fileId], references: [id]) // File that the permission is for, along with id (optional)
+    fileId   Int?
+    folder   Folder? @relation(fields: [folderId], references: [id]) // Folder that the permission is for, along with id (optional)
+    folderId Int?
+
+    @@index([userId])
+    @@index([fileId])
+    @@index([folderId])
+}
+
+model File {
+    id          Int          @id @default(autoincrement())
+    name        String
+    path        String       @unique // Full path
+    permissions Permission[]
+    content     String // Content of the file, this may become a problem, but we'll see
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    createdBy   User    @relation(fields: [createdById], references: [id])
+    createdById String
+    Parent      Folder? @relation(fields: [parentId], references: [id]) // Parent folder, along with id
+    parentId    Int?
+
+    @@index([name])
+}
+
+model Folder {
+    id          Int          @id @default(autoincrement())
+    name        String
+    files       File[]
+    folders     Folder[]     @relation("FoldersOnFolders")
+    parent      Folder?      @relation("FoldersOnFolders", fields: [parentId], references: [id])
+    parentId    Int?
+    permissions Permission[]
+    path        String       @unique
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([name])
 }
 
 model VerificationToken {
