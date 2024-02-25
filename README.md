@@ -109,8 +109,25 @@ Postgres:
 ```bash
 git clone https://github.com/maytees/woub
 ```
-2. 
+2. Create .env file
 
+Example
+```yaml
+DATABASE_URL="POSTGRES_DB"
+
+# openssl rand -base64 32
+NEXTAUTH_SECRET="mynextauthsecret"
+NEXTAUTH_URL="http://localhost:3000"
+
+GITHUB_CLIENT_ID=:"mygithuboauthid"
+GITHUB_SECRET="mygithuboauthsecret"
+```
+
+3. Run
+
+```bash
+npm run dev
+```
 
 *Made using the create-t3-app, using Prisma, NextJS, NextAuth, TRPC, and ShadcnUi, named after*
 *the infamous Oliver Monlar*
