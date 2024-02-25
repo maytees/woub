@@ -9,6 +9,7 @@ import type {
 import { getProviders, signIn } from "next-auth/react"
 import { getServerSession } from "next-auth/next"
 import { authOptionss as authOptions } from "../api/auth/[...nextauth]";
+import Image from 'next/image';
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getServerSession(context.req, context.res, authOptions)
@@ -32,7 +33,7 @@ const Signin = ({
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
             <div className="w-full max-w-md space-y-8">
-                <img
+                <Image
                     alt="woub_logo"
                     className="mx-auto w-auto"
                     height="64"
@@ -94,7 +95,7 @@ const Signin = ({
                     <span className="w-1/5 border-b border-black lg:w-1/4" />
                 </div>
 
-                {Object.values(providers || {}).map((provider: any) => (
+                {Object.values(providers ?? {}).map((provider: any) => (
                     <div key={provider.name}>
                         <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
                             onClick={() => {
