@@ -45,7 +45,6 @@ USER nextjs
 EXPOSE 3000
 ENV PORT 3000
 
-# RUN npx prisma generate
-# RUN npx prisma db push
+RUN npx prisma db push --skip-generate
 
 CMD ["node", "server.js"]
