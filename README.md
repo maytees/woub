@@ -15,7 +15,7 @@ First, pull the Docker image
 docker pull maytees/woub:latest
 ```
 
-#### Docker Compose (Reccomended)
+#### Docker Compose
 
 ```yml
 version: '3.8'
@@ -61,34 +61,6 @@ Then, run both services
 docker compose up
 ```
 *to run the services in the background, add the `-d` flag*
-
-
-#### Docker CLI
-
-##### Woub Service
-
-```bash
-docker build -t woub:latest . \
-  --build-arg NEXT_PUBLIC_CLIENTVAR=clientvar \
-  --build-arg GITHUB_CLIENT_ID=your_github_client_id \
-  --build-arg GITHUB_SECRET=your_github_secret \
-  --build-arg NEXTAUTH_SECRET=your_nextauth_secret \
-  --build-arg NEXTAUTH_URL=http://localhost:3000 
-```  
-*See next section for env modification*
-
-##### Postgres service
-
-```bash
-docker run -d --name db --restart always \
-  -p 5432:5432 \
-  -e POSTGRES_USER=dbusername \
-  -e POSTGRES_PASSWORD=dbpassword \
-  -e POSTGRES_DB=woub \
-  -v postgres_data:/var/lib/postgresql/data \
-  postgres:latest
-```
-*See next section for env modification*
 
 #### Environment variables
 
