@@ -1,5 +1,5 @@
 # deps stage
-FROM --platform=linux/amd64 node:21-alpine3.18 AS deps
+FROM --platform=linux/amd64 node:20-alpine3.18 AS deps
 RUN apk add --no-cache libc6-compat openssl1.1-compat
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY package.json package-lock.json* ./
 RUN npm ci
 
 # build stage
-FROM --platform=linux/amd64 node:21-alpine3.18 AS builder
+FROM --platform=linux/amd64 node:20-alpine3.18 AS builder
 ARG DATABASE_PATH
 ARG NEXT_PUBLIC_CLIENTVAR
 WORKDIR /app
@@ -21,7 +21,7 @@ COPY . .
 RUN SKIP_ENV_VALIDATION=1 npm run build
 
 # runner stage
-FROM --platform=linux/amd64 node:21-alpine3.18 AS runner
+FROM --platform=linux/amd64 node:20-alpine3.18 AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -38,9 +38,14 @@ COPY --from=builder /app/package.json ./package.json
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY prisma ./prisma/
+ENV HOSTNAME 0.0.0.0
 
 USER nextjs
 EXPOSE 3000
 ENV PORT 3000
+
+# RUN npx prisma generate
+# RUN npx prisma db push
 
 CMD ["node", "server.js"]

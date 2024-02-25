@@ -98,7 +98,8 @@ const Signin = ({
                 {Object.values(providers ?? {}).map((provider: any) => (
                     <div key={provider.name}>
                         <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.preventDefault();
                                 signIn(provider.id)
                             }}>
                             <GithubIcon className="h-5 w-5 text-black" />
