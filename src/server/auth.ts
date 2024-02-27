@@ -12,7 +12,7 @@ import Credentials from "next-auth/providers/credentials";
 import { env } from "~/env";
 import { db } from "~/server/db";
 import { string } from "zod";
-import { loginSchema } from "~/validation";
+import { loginSchema, credentialLoginSchema } from "~/validation";
 import { Prisma } from "@prisma/client";
 import bcrypt from "bcrypt";
 
@@ -73,10 +73,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.GITHUB_SECRET
     }),
     Credentials({
+      id: "emailcred",
       type: "credentials",
-      name: "Sign in with Username/Password",
+      name: "Sign in with Email/Password",
       credentials: {
-        username: { label: "Username", type: "text", placeholder: "woubbo" },
+        username: { label: "Email", type: "email", placeholder: "wubbo@gmail.com" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
@@ -85,6 +86,47 @@ export const authOptions: NextAuthOptions = {
           const user = await db.user.findFirst({
             where: {
               email: creds.email
+            }
+          });
+
+          if (!user) {
+            return null;
+          }
+
+          if (!user.password) {
+            return null;
+          }
+
+          const isValidPassword = bcrypt.compareSync(
+            creds.password,
+            user.password
+          );
+
+          if (!isValidPassword) {
+            return null;
+          }
+
+          return user;
+
+        } catch (e) {
+          return null;
+        }
+      },
+    }),
+    Credentials({
+      id: "usercred",
+      type: "credentials",
+      name: "Sign in with Username/Password",
+      credentials: {
+        username: { label: "Username", type: "text", placeholder: "wubbo" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        try {
+          const creds = await credentialLoginSchema.parseAsync(credentials);
+          const user = await db.user.findFirst({
+            where: {
+              name: creds.username,
             }
           });
 

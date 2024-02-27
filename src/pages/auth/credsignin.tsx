@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { useToast } from '../../components/ui/use-toast';
 import Link from 'next/link';
 import type {
     GetServerSidePropsContext,
@@ -11,13 +10,10 @@ import { getProviders, signIn } from "next-auth/react"
 import { getServerSession } from "next-auth/next"
 import { authOptionss as authOptions } from "../api/auth/[...nextauth]";
 import Image from 'next/image';
-import { api } from '../../utils/api';
-import type { IRegister } from '../../validation';
 import { useRouter } from "next/router";
+import { api } from '~/utils/api';
+import { ICredSignin, ILogin } from '~/validation';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { error } from 'console';
-import { TRPCError } from '@trpc/server';
-import { TRPCClientError } from '@trpc/client';
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getServerSession(context.req, context.res, authOptions)
@@ -35,30 +31,17 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 }
 
-const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+const Credsignin = ({ providers }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
     const router = useRouter();
-    const { toast } = useToast();
-    const [errorMessage, setErrorMessage] = useState<string | null>();
+    const { error } = router.query;
 
-    const mutation = api.auth.register.useMutation({
-        onError: (e) => setErrorMessage(e.message),
-        onSuccess: () => { router.push("/auth/signin") },
-    });
+    const {
+        register, handleSubmit, formState: { errors }
+    } = useForm<ICredSignin>();
 
-    const { register, handleSubmit, formState: { errors } } = useForm<IRegister>();
-
-    const onSubmit: SubmitHandler<IRegister> = async (data) => {
-        setErrorMessage(null);
-        try {
-            await mutation.mutateAsync(data);
-        } catch (e: any) {
-            if (e.code === "ALREADY_EXISTS") {
-                setErrorMessage("User already exists");
-            }
-            setErrorMessage(JSON.parse(e.message)[0].message);
-        }
+    const onSubmit: SubmitHandler<ICredSignin> = async (data) => {
+        await signIn("usercred", { ...data, callbackUrl: "/" })
     };
-
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
@@ -74,31 +57,15 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                         objectFit: "cover",
                     }}
                 />
-                <h2 className="mt-6 text-center text-3xl font-extrabold">Create your account</h2>
-                {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
+                <h2 className="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <div className="rounded-md shadow-sm space-y-3">
-                        <div>
-                            <label className="sr-only" htmlFor="email-address">
-                                Email address
-                            </label>
-                            <Input
-                                autoComplete="email"
-                                className="relative block w-full rounded-md border-gray-300 px-3 py-2 placeholder-gray-500 text-black focus:z-10 focus:border-black focus:outline-none focus:ring-black sm:text-sm"
-                                id="email-address"
-                                placeholder="Email address"
-                                required
-                                type="email"
-                                {...register("email", { required: true })}
-                            />
-                            {errors.email && <p className="text-red-500 text-sm">Email is required</p>}
-                        </div>
                         <div>
                             <label className="sr-only" htmlFor="username">
                                 Username
                             </label>
                             <Input
-                                autoComplete="Username"
+                                autoComplete="username"
                                 className="relative block w-full rounded-md border-gray-300 px-3 py-2 placeholder-gray-500 text-black focus:z-10 focus:border-black focus:outline-none focus:ring-black sm:text-sm"
                                 id="username"
                                 placeholder="Username"
@@ -106,7 +73,6 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                                 type="text"
                                 {...register("username", { required: true })}
                             />
-                            {errors.username && <p className="text-red-500 text-sm">Username is required</p>}
                         </div>
                         <div>
                             <label className="sr-only" htmlFor="password">
@@ -121,12 +87,11 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                                 type="password"
                                 {...register("password", { required: true })}
                             />
-                            {errors.password && <p className="text-red-500 text-sm">Password is required</p>}
                         </div>
                     </div>
                     <div>
                         <Button type="submit" className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                            Sign up
+                            Sign in with email
                         </Button>
                     </div>
                 </form>
@@ -143,21 +108,32 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                     <span className="w-1/5 border-b border-black lg:w-1/4" />
                 </div>
 
-                <div>
-                    <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            signIn("github")
-                        }}>
-                        <GithubIcon className="h-5 w-5 text-black" />
-                        <span className="ml-2">Sign up with GitHub</span>
-                    </Button>
+                <div className="flex flex-col gap-y-2">
+                    <div>
+                        <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                signIn("github")
+                            }}>
+                            <GithubIcon className="h-5 w-5 text-black group-hover:text-white" />
+                            <span className="ml-2">Sign in with GitHub</span>
+                        </Button>
+                    </div>
+                    <div>
+                        <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                router.push("/auth/signin")
+                            }}>
+                            <span className="ml-2">Sign in with email</span>
+                        </Button>
+                    </div>
                 </div>
 
                 < div className="flex items-center justify-center">
                     <div className="text-sm">
-                        <Link className="font-medium text-black hover:text-zinc-400" href="/auth/signin">
-                            Already have an account? Sign in
+                        <Link className="font-medium text-black hover:text-zinc-400" href="/auth/register">
+                            Don't have an account? Sign up
                         </Link>
                     </div>
                 </div>
@@ -186,4 +162,4 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
-export default Register
+export default Credsignin

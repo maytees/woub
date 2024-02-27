@@ -42,7 +42,7 @@ const Signin = ({
     } = useForm<ILogin>();
 
     const onSubmit: SubmitHandler<ILogin> = async (data) => {
-        await signIn("credentials", { ...data, callbackUrl: "/" });
+        await signIn("emailcred", { ...data, callbackUrl: "/" });
     };
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
