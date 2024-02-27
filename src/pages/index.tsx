@@ -3,7 +3,6 @@ import Head from "next/head";
 // import Link from "next/link";
 import { useRouter } from "next/router";
 // import { redirect } from "next/navigation";
-// import { api } from "~/utils/api";
 import { useEffect } from "react";
 
 export default function Home() {

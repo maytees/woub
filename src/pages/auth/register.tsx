@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { useToast } from '../../components/ui/use-toast';
 import Link from 'next/link';
 import type {
     GetServerSidePropsContext,
@@ -10,10 +11,11 @@ import { getProviders, signIn } from "next-auth/react"
 import { getServerSession } from "next-auth/next"
 import { authOptionss as authOptions } from "../api/auth/[...nextauth]";
 import Image from 'next/image';
+import { api } from '../../utils/api';
+import type { IRegister } from '../../validation';
 import { useRouter } from "next/router";
-import { api } from '~/utils/api';
-import { ILogin } from '~/validation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { error } from 'console';
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getServerSession(context.req, context.res, authOptions)
@@ -31,20 +33,58 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     }
 }
 
-const Signin = ({
-    providers,
-}: InferGetServerSidePropsType<typeof getServerSideProps>) => {
+const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
     const router = useRouter();
-    const { error } = router.query;
+    const { toast } = useToast();
+    const [errorMessage, setErrorMessage] = useState<string | null>();
 
-    const {
-        register, handleSubmit, formState: { errors },
-    } = useForm<ILogin>();
+    const mutation = api.auth.register.useMutation({
+        onError: (e) => setErrorMessage(e.message),
+        onSuccess: () => { router.push("/auth/signin") },
+    });
 
-    const onSubmit: SubmitHandler<ILogin> = async (data) => {
-        console.log(data, "is the dta")
-        await signIn("credentials", { ...data, callbackUrl: "/" });
+    const { register, handleSubmit, formState: { errors } } = useForm<IRegister>();
+
+    const onSubmit: SubmitHandler<IRegister> = async (data) => {
+        console.log(data);
+        setErrorMessage(null);
+        mutation.mutateAsync(data);
     };
+
+    // useEffect(() => {
+    //     console.log("hi", errorMessage, errors.username, errors.email, errors.password);
+    //     errorMessage ? console.log("error") : console.log("no error");
+    //     errors.username ? console.log("username error") : console.log("no username error");
+    //     errors.email ? console.log("email error") : console.log("no email error");
+    //     errors.password ? console.log("password error") : console.log("no password error");
+
+
+    //     if (errorMessage) toast({
+    //         variant: "destructive",
+    //         title: "Error while creating account",
+    //         description: errorMessage,
+    //     });
+
+    //     if (errors.username) toast({
+    //         variant: "destructive",
+    //         title: "Error while creating account",
+    //         description: "Username is required",
+    //     });
+
+    //     if (errors.email) toast({
+    //         variant: "destructive",
+    //         title: "Error while creating account",
+    //         description: "Email is required",
+    //     });
+
+    //     if (errors.password) toast({
+    //         variant: "destructive",
+    //         title: "Error while creating account",
+    //         description: "Password is required",
+    //     });
+
+    // }, [errorMessage, errors.username, errors.email, errors.password]);
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
             <div className="w-full max-w-md space-y-8">
@@ -59,8 +99,8 @@ const Signin = ({
                         objectFit: "cover",
                     }}
                 />
-                <h2 className="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                <h2 className="mt-6 text-center text-3xl font-extrabold">Create your account</h2>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
                     <div className="rounded-md shadow-sm space-y-3">
                         <div>
                             <label className="sr-only" htmlFor="email-address">
@@ -74,6 +114,20 @@ const Signin = ({
                                 required
                                 type="email"
                                 {...register("email", { required: true })}
+                            />
+                        </div>
+                        <div>
+                            <label className="sr-only" htmlFor="username">
+                                Username
+                            </label>
+                            <Input
+                                autoComplete="Username"
+                                className="relative block w-full rounded-md border-gray-300 px-3 py-2 placeholder-gray-500 text-black focus:z-10 focus:border-black focus:outline-none focus:ring-black sm:text-sm"
+                                id="username"
+                                placeholder="Username"
+                                required
+                                type="text"
+                                {...register("username", { required: true })}
                             />
                         </div>
                         <div>
@@ -93,7 +147,7 @@ const Signin = ({
                     </div>
                     <div>
                         <Button type="submit" className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2">
-                            Sign in with email
+                            Sign up
                         </Button>
                     </div>
                 </form>
@@ -117,14 +171,14 @@ const Signin = ({
                             signIn("github")
                         }}>
                         <GithubIcon className="h-5 w-5 text-black" />
-                        <span className="ml-2">Sign in with GitHub</span>
+                        <span className="ml-2">Sign up with GitHub</span>
                     </Button>
                 </div>
 
                 < div className="flex items-center justify-center">
                     <div className="text-sm">
-                        <Link className="font-medium text-black hover:text-zinc-400" href="/auth/register">
-                            Don't have an account? Sign up
+                        <Link className="font-medium text-black hover:text-zinc-400" href="/auth/signin">
+                            Already have an account? Sign in
                         </Link>
                     </div>
                 </div>
@@ -153,5 +207,4 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
     )
 }
 
-
-export default Signin;
+export default Register
