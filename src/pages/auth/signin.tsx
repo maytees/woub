@@ -42,7 +42,6 @@ const Signin = ({
     } = useForm<ILogin>();
 
     const onSubmit: SubmitHandler<ILogin> = async (data) => {
-        console.log(data, "is the dta")
         await signIn("credentials", { ...data, callbackUrl: "/" });
     };
     return (
@@ -110,15 +109,26 @@ const Signin = ({
                     <span className="w-1/5 border-b border-black lg:w-1/4" />
                 </div>
 
-                <div>
-                    <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            signIn("github")
-                        }}>
-                        <GithubIcon className="h-5 w-5 text-black" />
-                        <span className="ml-2">Sign in with GitHub</span>
-                    </Button>
+                <div className="flex flex-col gap-y-2">
+                    <div>
+                        <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                signIn("github")
+                            }}>
+                            <GithubIcon className="h-5 w-5 text-black group-hover:text-white" />
+                            <span className="ml-2">Sign in with GitHub</span>
+                        </Button>
+                    </div>
+                    <div>
+                        <Button className="group relative flex w-full justify-center rounded-md border border-black bg-white py-2 px-4 text-sm font-medium text-black hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                router.push("/auth/credsignin")
+                            }}>
+                            <span className="ml-2">Sign in with Username</span>
+                        </Button>
+                    </div>
                 </div>
 
                 < div className="flex items-center justify-center">
@@ -152,6 +162,5 @@ function GithubIcon(props: React.SVGProps<SVGSVGElement>) {
         </svg>
     )
 }
-
 
 export default Signin;

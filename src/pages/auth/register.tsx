@@ -16,6 +16,8 @@ import type { IRegister } from '../../validation';
 import { useRouter } from "next/router";
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { error } from 'console';
+import { TRPCError } from '@trpc/server';
+import { TRPCClientError } from '@trpc/client';
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getServerSession(context.req, context.res, authOptions)
@@ -46,44 +48,17 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
     const { register, handleSubmit, formState: { errors } } = useForm<IRegister>();
 
     const onSubmit: SubmitHandler<IRegister> = async (data) => {
-        console.log(data);
         setErrorMessage(null);
-        mutation.mutateAsync(data);
+        try {
+            await mutation.mutateAsync(data);
+        } catch (e) {
+            if ((e).code === "ALREADY_EXISTS") {
+                setErrorMessage("User already exists");
+            }
+            setErrorMessage(JSON.parse((e).message)[0].message);
+        }
     };
 
-    // useEffect(() => {
-    //     console.log("hi", errorMessage, errors.username, errors.email, errors.password);
-    //     errorMessage ? console.log("error") : console.log("no error");
-    //     errors.username ? console.log("username error") : console.log("no username error");
-    //     errors.email ? console.log("email error") : console.log("no email error");
-    //     errors.password ? console.log("password error") : console.log("no password error");
-
-
-    //     if (errorMessage) toast({
-    //         variant: "destructive",
-    //         title: "Error while creating account",
-    //         description: errorMessage,
-    //     });
-
-    //     if (errors.username) toast({
-    //         variant: "destructive",
-    //         title: "Error while creating account",
-    //         description: "Username is required",
-    //     });
-
-    //     if (errors.email) toast({
-    //         variant: "destructive",
-    //         title: "Error while creating account",
-    //         description: "Email is required",
-    //     });
-
-    //     if (errors.password) toast({
-    //         variant: "destructive",
-    //         title: "Error while creating account",
-    //         description: "Password is required",
-    //     });
-
-    // }, [errorMessage, errors.username, errors.email, errors.password]);
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
@@ -100,6 +75,7 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                     }}
                 />
                 <h2 className="mt-6 text-center text-3xl font-extrabold">Create your account</h2>
+                {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)} noValidate>
                     <div className="rounded-md shadow-sm space-y-3">
                         <div>
@@ -115,6 +91,7 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                                 type="email"
                                 {...register("email", { required: true })}
                             />
+                            {errors.email && <p className="text-red-500 text-sm">Email is required</p>}
                         </div>
                         <div>
                             <label className="sr-only" htmlFor="username">
@@ -129,6 +106,7 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                                 type="text"
                                 {...register("username", { required: true })}
                             />
+                            {errors.username && <p className="text-red-500 text-sm">Username is required</p>}
                         </div>
                         <div>
                             <label className="sr-only" htmlFor="password">
@@ -143,6 +121,7 @@ const Register = ({ providers }: InferGetServerSidePropsType<typeof getServerSid
                                 type="password"
                                 {...register("password", { required: true })}
                             />
+                            {errors.password && <p className="text-red-500 text-sm">Password is required</p>}
                         </div>
                     </div>
                     <div>
