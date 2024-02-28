@@ -13,8 +13,19 @@ import { env } from "~/env";
 import { db } from "~/server/db";
 import { string } from "zod";
 import { loginSchema, credentialLoginSchema } from "~/validation";
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient, User } from "@prisma/client";
 import bcrypt from "bcrypt";
+
+enum ErrorType {
+  INVALID_LOGIN,
+  NO_PASSWORD
+};
+
+export type CredentialsCallbackError = {
+  errtype: ErrorType;
+  message: string;
+  code: number;
+};
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -80,7 +91,7 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Email", type: "email", placeholder: "wubbo@gmail.com" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials): Promise<User | null> => {
         try {
           const creds = await loginSchema.parseAsync(credentials);
           const user = await db.user.findFirst({
@@ -121,7 +132,7 @@ export const authOptions: NextAuthOptions = {
         username: { label: "Username", type: "text", placeholder: "wubbo" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      authorize: async (credentials): Promise<User | null> => {
         try {
           const creds = await credentialLoginSchema.parseAsync(credentials);
           const user = await db.user.findFirst({

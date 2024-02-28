@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import Link from 'next/link';
@@ -6,7 +6,7 @@ import type {
     GetServerSidePropsContext,
     InferGetServerSidePropsType,
 } from "next"
-import { getProviders, signIn } from "next-auth/react"
+import { SignInResponse, getProviders, signIn } from "next-auth/react"
 import { getServerSession } from "next-auth/next"
 import { authOptionss as authOptions } from "../api/auth/[...nextauth]";
 import Image from 'next/image';
@@ -14,6 +14,9 @@ import { useRouter } from "next/router";
 import { api } from '~/utils/api';
 import { ILogin } from '~/validation';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { User } from '@prisma/client';
+import { set } from 'zod';
+import { RedirectableProviderType } from 'next-auth/providers/index';
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
     const session = await getServerSession(context.req, context.res, authOptions)
@@ -36,14 +39,36 @@ const Signin = ({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
     const router = useRouter();
     const { error } = router.query;
+    const [invalidCreds, setInvalidCreds] = useState(false);
+    const [res, setRes] = useState<any>();
 
     const {
         register, handleSubmit, formState: { errors },
     } = useForm<ILogin>();
 
     const onSubmit: SubmitHandler<ILogin> = async (data) => {
-        await signIn("emailcred", { ...data, callbackUrl: "/" });
+        setInvalidCreds(false);
+        const res: SignInResponse | undefined = await signIn("emailcred", { ...data, callbackUrl: "/", redirect: false });
+        setRes(res);
     };
+
+    useEffect(() => {
+        setInvalidCreds(false)
+    }, [])
+
+    useEffect(() => {
+        if (!res) return;
+
+        if (!res.ok) {
+            setInvalidCreds(true);
+            return;
+        }
+
+        if (res.ok) {
+            router.push(res.url);
+        }
+    }, [res]);
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
             <div className="w-full max-w-md space-y-8">
@@ -59,6 +84,8 @@ const Signin = ({
                     }}
                 />
                 <h2 className="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
+                {invalidCreds ? (<h3 className="mt-6 text-center text-xl font-extrabold text-red-300">Incorrect email or password</h3>) : null}
+
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <div className="rounded-md shadow-sm space-y-3">
                         <div>

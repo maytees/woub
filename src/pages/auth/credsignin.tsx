@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import Link from 'next/link';
@@ -6,7 +6,7 @@ import type {
     GetServerSidePropsContext,
     InferGetServerSidePropsType,
 } from "next"
-import { getProviders, signIn } from "next-auth/react"
+import { SignInResponse, getProviders, signIn } from "next-auth/react"
 import { getServerSession } from "next-auth/next"
 import { authOptionss as authOptions } from "../api/auth/[...nextauth]";
 import Image from 'next/image';
@@ -34,14 +34,33 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 const Credsignin = ({ providers }: InferGetServerSidePropsType<typeof getServerSideProps>) => {
     const router = useRouter();
     const { error } = router.query;
+    const [invalidCreds, setInvalidCreds] = useState(false);
+    const [res, setRes] = useState<SignInResponse | undefined>(undefined);
 
     const {
         register, handleSubmit, formState: { errors }
     } = useForm<ICredSignin>();
 
     const onSubmit: SubmitHandler<ICredSignin> = async (data) => {
-        await signIn("usercred", { ...data, callbackUrl: "/" })
+        setInvalidCreds(false);
+        const res: SignInResponse | undefined = await signIn("usercred", { ...data, callbackUrl: "/", redirect: false })
+        setRes(res);
     };
+
+    useEffect(() => {
+        setInvalidCreds(false)
+    }, []);
+
+    useEffect(() => {
+        if (!res) return;
+
+        if (!res.ok) {
+            setInvalidCreds(true);
+            return;
+        }
+
+        if (res.ok && res.url) router.push(res.url);
+    }, [res])
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-black">
@@ -58,6 +77,7 @@ const Credsignin = ({ providers }: InferGetServerSidePropsType<typeof getServerS
                     }}
                 />
                 <h2 className="mt-6 text-center text-3xl font-extrabold">Sign in to your account</h2>
+                {invalidCreds ? (<h3 className="mt-6 text-center text-xl font-extrabold text-red-300">Incorrect username or password</h3>) : null}
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
                     <div className="rounded-md shadow-sm space-y-3">
                         <div>
