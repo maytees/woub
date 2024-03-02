@@ -6,7 +6,7 @@ WORKDIR /app
 # install prisma
 COPY prisma ./
 
-# install deps 
+# install deps
 COPY package.json package-lock.json* ./
 RUN npm ci
 
