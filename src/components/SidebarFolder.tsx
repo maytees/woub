@@ -8,11 +8,12 @@ import {
 type SidebarFolderProps = {
     name: string,
     icon?: string,
+    selected?: boolean
 }
 
 const SidebarFolder = (props: SidebarFolderProps) => {
     return (
-        <Button variant="outline" className="justify-start"
+        <Button variant={props.selected ? "default" : "ghost"} className="justify-start rounded-none"
             onClick=
             {
                 () => {
@@ -21,8 +22,8 @@ const SidebarFolder = (props: SidebarFolderProps) => {
             }
         >
             <div className="flex flex-row justify-start space-x-2">
-                <Image width={18} height={18} src={props.icon ? props.icon : "folder.svg"} alt="" className="" />
-                <p className="text-sm">{props.name}</p>
+                <Image width={20} height={20} src={props.icon ? props.icon : "folder.svg"} alt="" className="" />
+                <p className="text-md font-semibold">{props.name}</p>
             </div>
         </Button>
     )

@@ -57,11 +57,11 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    Folder        Folder[]
     scope         String? // Path of the scope (what user is able to acceess)
     Permission    Permission[]
     Preferences   Preferences? @relation(fields: [preferencesId], references: [id])
     preferencesId String?
+    pins          Folder[]
 
     @@index([name])
     @@index([email])
