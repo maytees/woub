@@ -10,7 +10,9 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "./ui/tooltip"
-
+import {
+    DialogTrigger,
+} from "./ui/dialog"
 type SidebarProfileProps = {
     name: string,
     icon?: string,
@@ -33,12 +35,14 @@ const SidebarProfile = (props: SidebarProfileProps) => {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                >
-                                    <GearIcon className="h-5 w-5" />
-                                </Button>
+                                <DialogTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                    >
+                                        <GearIcon className="h-5 w-5" />
+                                    </Button>
+                                </DialogTrigger>
                             </TooltipTrigger>
                             <TooltipContent>
                                 <p>Settings</p>

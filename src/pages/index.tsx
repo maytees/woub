@@ -7,12 +7,26 @@ import { useEffect } from "react";
 import SidebarFolder from "~/components/SidebarFolder";
 import SidebarProfile from "~/components/SidebarProfile";
 import { PersonIcon } from "@radix-ui/react-icons"
-
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import SettingsDialog from "@/components/SettingsDialog"
+import {
+  Button
+} from "@/components/ui/button"
 import {
   ResizablePanel,
   ResizableHandle,
   ResizablePanelGroup,
 } from "~/components/ui/resizable";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function Home() {
   const { data: sessionData } = useSession();
@@ -40,19 +54,20 @@ export default function Home() {
           direction="horizontal"
         >
           <ResizablePanel className="p-5 flex flex-col justify-between" defaultSize={15}>
-            <section>
-              <SidebarFolder name="Desktop" children={[
-                <SidebarFolder name="Photos" children={[
-                  <SidebarFolder name="Memories" />
-                ]} />
-              ]} />
+            <section className="flex flex-col space-y-2">
+              <h2 className="text-xl font-semibold">Quick Access</h2>
+              <hr />
+              <SidebarFolder name="Desktop" />
               <SidebarFolder name="Documents" />
               <SidebarFolder name="Music" />
               <SidebarFolder name="Programming" />
               <SidebarFolder name="Self Hosted" />
               <SidebarFolder name="Debian" />
             </section>
-            <SidebarProfile name={sessionData?.user?.name ?? "Guest"} icon={sessionData?.user?.image ?? "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"} />
+            <Dialog>
+              <SettingsDialog />
+              <SidebarProfile name={sessionData?.user?.name ?? "Guest"} icon={sessionData?.user?.image ?? "https://upload.wikimedia.org/wikipedia/commons/2/2c/Default_pfp.svg"} />
+            </Dialog>
           </ResizablePanel >
           <ResizableHandle className="bg-black h-screen opacity-5" withHandle />
           <ResizablePanel className="p-5">Two</ResizablePanel>
