@@ -59,8 +59,7 @@ const Register = ({
     setErrorMessage(null);
     try {
       const res = await mutation.mutateAsync(data);
-    } catch (e) {
-      console.log(e, "is eeee");
+    } catch (e: any) {
       setErrorMessage(e.message);
     }
   };
@@ -113,7 +112,7 @@ const Register = ({
                 Username
               </label>
               <Input
-                autoComplete="Username"
+                autoComplete="username"
                 className="relative block w-full rounded-md border-gray-300 px-3 py-2 text-black placeholder-gray-500 focus:z-10 focus:border-black focus:outline-none focus:ring-black sm:text-sm"
                 id="username"
                 placeholder="Username"
